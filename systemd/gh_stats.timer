@@ -1,0 +1,11 @@
+[Unit]
+Description=scrape github stats once in a while
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+Unit=gh_stats.service
+
+[Install]
+WantedBy=multi-user.target
