@@ -95,3 +95,6 @@ stars tlog-dev errors
 stars tlog-dev loc
 
 stars slowlang slow
+
+stars filapro oneformer3d
+stars filapro unidet3d
