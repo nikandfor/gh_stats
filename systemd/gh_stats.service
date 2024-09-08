@@ -2,9 +2,9 @@
 Description=github stats scraper
 
 [Service]
-ExecStart=bash /root/followers.sh
-#Environment come from /etc/systemd/system/gh_stats.service.d/click_vars.conf
-#Restart=always
+WorkingDirectory=/opt/gh_stats
+ExecStart=bash /opt/gh_stats/repo/followers.sh
+#Environment vars come from /etc/systemd/system/gh_stats.service.d/*.conf
 
 [Install]
 WantedBy=multi-user.target

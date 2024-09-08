@@ -66,7 +66,9 @@ stars() {
 		echo "FAIL: stars $1/$2"
 }
 
-click --query "SELECT 1" >/dev/null && echo click is ok || { echo click is ill; exit; }
+echo Spinning up clickhouse...
+
+click --query "SELECT 1" >/dev/null && echo clickhouse is ok || { echo clickhouse is ill, exiting; exit; }
 
 followers nikandfor
 followers tlog-dev
@@ -98,3 +100,4 @@ stars slowlang slow
 
 stars filapro oneformer3d
 stars filapro unidet3d
+
