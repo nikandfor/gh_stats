@@ -37,8 +37,9 @@ followers_do() {
 }
 
 stars_do() {
-	login=$1
-	repo=$2
+	table=$1
+	login=$2
+	repo=$3
 
 	id=$(user_id $login)
 	repo_id=$(repo_id $login $repo)
@@ -50,7 +51,7 @@ stars_do() {
 		>$req
 
 	jq -e '.' <$req >/dev/null && cat $req | \
-		click --query "INSERT INTO stars (id, login, repo_id, repo, f_id, f_login) SELECT id, login, repo_id, repo, f_id, f_login FROM input('id Int64, login String, repo_id Int64, repo String, f_id Int64, f_login String') FORMAT JSONEachRow" || \
+		click --query "INSERT INTO ${table} (id, login, repo_id, repo, f_id, f_login) SELECT id, login, repo_id, repo, f_id, f_login FROM input('id Int64, login String, repo_id Int64, repo String, f_id Int64, f_login String') FORMAT JSONEachRow" || \
 		true
 }
 
@@ -61,9 +62,13 @@ followers() {
 }
 
 stars() {
-	stars_do "$@" && \
-		echo "ok  : stars $1/$2" || \
-		echo "FAIL: stars $1/$2"
+	stars_do stars "$@" && \
+		echo "ok  : stars    $1/$2" || \
+		echo "FAIL: stars    $1/$2"
+
+	stars_do watchers "$@" && \
+		echo "ok  : watchers $1/$2" || \
+		echo "FAIL: watchers $1/$2"
 }
 
 echo Spinning up clickhouse...

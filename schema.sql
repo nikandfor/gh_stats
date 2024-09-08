@@ -44,3 +44,5 @@ ENGINE MergeTree
 PARTITION BY month
 ORDER BY (id, repo_id, f_id, ts)
 ;
+
+CREATE TABLE watchers AS stars;
