@@ -76,10 +76,10 @@ echo Spinning up clickhouse...
 click --query "SELECT 1" >/dev/null && echo clickhouse is ok || { echo clickhouse is ill, exiting; exit; }
 
 followers nikandfor
-followers tlog-dev
-followers slowlang
-followers txfail
 followers nikandwork
+followers slowlang
+followers tlog-dev
+followers txfail
 
 followers filapro
 
@@ -87,19 +87,20 @@ followers korzhenevski
 followers rndcenter
 
 stars nikandfor batch
-stars nikandfor json
-stars nikandfor graceful
-stars nikandfor throttle
 stars nikandfor cli
+stars nikandfor cover
+stars nikandfor graceful
 stars nikandfor hacked
 stars nikandfor heap
+stars nikandfor jq
+stars nikandfor json
 stars nikandfor socks5
-stars nikandfor cover
+stars nikandfor throttle
 
-stars tlog-dev tlog
 stars tlog-dev eazy
 stars tlog-dev errors
 stars tlog-dev loc
+stars tlog-dev tlog
 
 stars slowlang slow
 
