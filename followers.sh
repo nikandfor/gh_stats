@@ -75,6 +75,8 @@ echo Spinning up clickhouse...
 
 click --query "SELECT 1" >/dev/null && echo clickhouse is ok || { echo clickhouse is ill, exiting; exit; }
 
+[ "$#" -gt 0 ] && { "$@"; exit; }
+
 followers nikandfor
 followers nikandwork
 followers slowlang
@@ -94,6 +96,7 @@ stars nikandfor hacked
 stars nikandfor heap
 stars nikandfor jq
 stars nikandfor json
+stars nikandfor skip
 stars nikandfor socks5
 stars nikandfor throttle
 

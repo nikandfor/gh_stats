@@ -3,8 +3,8 @@ Description=github stats scraper
 
 [Service]
 WorkingDirectory=/opt/gh_stats
+EnvironmentFile=/opt/gh_stats/.env
 ExecStart=bash /opt/gh_stats/repo/followers.sh
-#Environment vars come from /etc/systemd/system/gh_stats.service.d/*.conf
 
 [Install]
 WantedBy=multi-user.target
