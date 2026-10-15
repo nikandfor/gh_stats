@@ -2,57 +2,68 @@
 
 set -u
 
+log() {
+	echo >&2 "$@";
+}
+
+fail() {
+	echo >&2 "$@";
+	exit 1;
+}
+
 click() {
 	clickhouse client -h $CLICK_HOST --secure -d $CLICK_DB -u $CLICK_USER --password=$CLICK_PASS \
 		"$@"
 }
 
 user_id() {
-	login=$1
+	local login=$1 res
 
-	gh api users/$login | jq -r .id
+	res="$(gh api users/$login)" || { log "user_id:gh $*";          return 1; }
+	jq -r .id <<<"$res"          || { log "user_id:jq $* ==> $res"; return 1; }
 }
 
 repo_id() {
-	login=$1
-	repo=$2
+	local login=$1 repo=$2 res
 
-	gh api repos/$login/$repo | jq -r .id
+	res="$(gh api repos/$login/$repo)" || { log "repo_id:gh $*";          return 1; }
+	jq -r .id <<<"$res"                || { log "repo_id:jq $* ==> $res"; return 1; }
 }
 
 followers_do() {
-	login=$1
+	local login=$1 id req res
 
-	id=$(user_id $login)
+	id="$(user_id $login)" || return 1
 
-	req=/tmp/save.json
+	res="$(gh api --paginate users/$login/followers)" || { log "followers_do:gh $*"; return 1; }
+	req="$(jq -c --arg id "$id" --arg login "$login" \
+		'.[] | {id: $id, login: $login, f_id: .id, f_login: .login}' <<<"$res")" ||
+							{ log "followers_do:jq $* ==> $res"; return 1; }
 
-	gh api --paginate users/$login/followers | \
-		jq -c ".[] | {id: ${id}, login: \"${login}\", f_id: .id, f_login: .login}" \
-		>$req
-
-	jq -e '.' <$req >/dev/null && cat $req | \
-		click --query "INSERT INTO followers (id, login, f_id, f_login) SELECT id, login, f_id, f_login FROM input('id Int64, login String, f_id Int64, f_login String') FORMAT JSONEachRow" || \
-		true
+	click <<<"$req" --query \
+		"INSERT INTO followers (id, login, f_id, f_login) SELECT id, login, f_id, f_login
+			FROM input('id Int64, login String, f_id Int64, f_login String')
+			FORMAT JSONEachRow" ||
+		{ log "followers_do:ch $* ==> $res"; return 1; }
 }
 
 stars_do() {
-	table=$1
-	login=$2
-	repo=$3
+	local table=$1 login=$2 repo=$3 id repo_id req res
 
-	id=$(user_id $login)
-	repo_id=$(repo_id $login $repo)
+	id="$(user_id $login)"            || return 1
+	repo_id="$(repo_id $login $repo)" || return 1
 
-	req=/tmp/save.json
+	res="$(gh api --paginate repos/$login/$repo/stargazers )" || { log "stars_do:gh $*"; return 1; }
+	req="$(jq -c --arg id "$id" --arg login "$login" --arg repo_id "$repo_id" --arg repo "$repo" \
+		'.[] | {id: $id, login: $login, repo_id: $repo_id, repo: $repo, f_id: .id, f_login: .login}' <<<"$res")" ||
+		{ log "stars_do:jq $* ==> $res"; return 1; }
 
-	gh api --paginate repos/$login/$repo/stargazers | \
-		jq -c ".[] | {id: ${id}, login: \"${login}\", repo_id: ${repo_id}, repo: \"${repo}\", f_id: .id, f_login: .login}" \
-		>$req
-
-	jq -e '.' <$req >/dev/null && cat $req | \
-		click --query "INSERT INTO ${table} (id, login, repo_id, repo, f_id, f_login) SELECT id, login, repo_id, repo, f_id, f_login FROM input('id Int64, login String, repo_id Int64, repo String, f_id Int64, f_login String') FORMAT JSONEachRow" || \
-		true
+	click <<<"$req" --query --arg table "$table" \
+		"INSERT INTO \$table (id, login, repo_id, repo, f_id, f_login)
+			SELECT id, login, repo_id, repo, f_id, f_login
+			FROM input('id Int64, login String, repo_id Int64, repo String, f_id Int64, f_login String')
+			FORMAT JSONEachRow" ||
+		{ log "stars_do:ch $* ==> $res"; return 1; }
 }
 
 followers() {
@@ -73,7 +84,7 @@ stars() {
 
 echo Spinning up clickhouse...
 
-click --query "SELECT 1" >/dev/null && echo clickhouse is ok || { echo clickhouse is ill, exiting; exit; }
+click --query "SELECT 1" >/dev/null && log "clickhouse is ok" || fail "clickhouse is ill, exiting"
 
 [ "$#" -gt 0 ] && { "$@"; exit; }
 
@@ -100,7 +111,11 @@ stars nikandfor heap
 stars nikandfor jq
 stars nikandfor json2
 stars nikandfor mqtt
+stars nikandfor mux
+stars nikandfor rawtls
+stars nikandfor schema
 stars nikandfor skip
+stars nikandfor snmp
 stars nikandfor socks5
 stars nikandfor throttle
 stars nikandfor vanity-go
